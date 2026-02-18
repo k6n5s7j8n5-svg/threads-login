@@ -1,3 +1,4 @@
+print("=== DEPLOY CHECK: AI VERSION 2026-02-18 14:45 ===")
 import os
 import requests
 from fastapi import FastAPI, Request
