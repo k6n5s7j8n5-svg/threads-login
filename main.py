@@ -41,5 +41,8 @@ async def webhook(request: Request):
             },
             timeout=10,
         )
+        res = requests.post( ... )
+print("reply status:", res.status_code, res.text)
+
 
     return {"ok": True}
