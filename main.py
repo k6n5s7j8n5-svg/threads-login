@@ -6,4 +6,4 @@ app = Flask(__name__)
 def webhook():
     print("LINEきた")
     print(request.json)
-    return "OK", 200
+    return "わかった", 200
