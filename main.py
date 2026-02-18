@@ -6,13 +6,13 @@ app = FastAPI()
 
 LINE_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
 
+
 @app.post("/webhook")
 async def webhook(request: Request):
     body = await request.json()
     print("LINEきた")
     print(body)
 
-    # 念のためトークン未設定チェック
     if not LINE_TOKEN:
         return {"ok": False, "error": "LINE_CHANNEL_ACCESS_TOKEN is missing"}
 
@@ -26,10 +26,9 @@ async def webhook(request: Request):
         if not reply_token or text is None:
             continue
 
-        # 返信内容（とりあえずオウム返し）
         reply_text = f"受け取ったで: {text}"
 
-        requests.post(
+        res = requests.post(
             "https://api.line.me/v2/bot/message/reply",
             headers={
                 "Authorization": f"Bearer {LINE_TOKEN}",
@@ -41,8 +40,8 @@ async def webhook(request: Request):
             },
             timeout=10,
         )
-        res = requests.post( ... )
-print("reply status:", res.status_code, res.text)
 
+        print("reply status:", res.status_code, res.text)
 
     return {"ok": True}
+
