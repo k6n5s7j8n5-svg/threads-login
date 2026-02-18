@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi import FastAPI, OpenAI
 
 app = FastAPI()
+client= OpenAI()
 
 LINE_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
 
