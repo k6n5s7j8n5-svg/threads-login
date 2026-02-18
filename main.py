@@ -26,8 +26,18 @@ async def webhook(request: Request):
         if not reply_token or text is None:
             continue
 
-        reply_text = f"AIテストやで: {text}"
+        # ===== ここがAI生成 =====
+        try:
+            resp = client.responses.create(
+                model="gpt-4o-mini",
+                input=f"あなたは大阪の立ち飲み牡蠣屋の店主の相棒AI。関西弁で短めに返事して。\nユーザー: {text}\nAI:"
+            )
+            ai_text = resp.output_text.strip()
+        except Exception as e:
+            print("OpenAI error:", e)
+            ai_text = "ごめん、今ちょい詰まったわ💦 もう一回送って！"
 
+        # ===== LINEへ返信 =====
         res = requests.post(
             "https://api.line.me/v2/bot/message/reply",
             headers={
@@ -36,16 +46,11 @@ async def webhook(request: Request):
             },
             json={
                 "replyToken": reply_token,
-                "messages": [{"type": "text", "text": reply_text}],
+                "messages": [{"type": "text", "text": ai_text}],
             },
             timeout=10,
         )
-
         print("reply status:", res.status_code, res.text)
 
     return {"ok": True}
 
-
-@app.get("/")
-def root():
-    return {"ok": True}
