@@ -1,35 +1,30 @@
-from fastapi import FastAPI, Request
+from flask import Flask, request
 import os
-import requests
 
-app = FastAPI()
+app = Flask(__name__)
 
-CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+SAVE_FILE = "threads_post.txt"
 
-@app.post("/webhook")
-async def webhook(request: Request):
-    body = await request.json()
-    events = body.get("events", [])
+@app.route("/", methods=["GET"])
+def home():
+    return "OK"
+
+@app.route("/callback", methods=["POST"])
+def callback():
+    data = request.json
+
+    # LINEからのWebhookはここに入る
+    events = data.get("events", [])
 
     for event in events:
-        if event["type"] == "message":
-            user_id = event["source"]["userId"]
-            text = event["message"]["text"]
+        if event.get("type") == "message":
+            message = event.get("message", {})
+            if message.get("type") == "text":
+                text = message.get("text")
 
-            # オウム返し（テスト）
-            reply_token = event["replyToken"]
-            reply_message(reply_token, f"受け取ったで！\n{text}")
+                # 送られてきた文章をファイルに保存
+                with open(SAVE_FILE, "w", encoding="utf-8") as f:
+                    f.write(text)
 
-    return {"ok": True}
+    return "OK"
 
-def reply_message(reply_token, text):
-    url = "https://api.line.me/v2/bot/message/reply"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
-    }
-    data = {
-        "replyToken": reply_token,
-        "messages": [{"type": "text", "text": text}]
-    }
-    requests.post(url, headers=headers, json=data)
