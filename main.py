@@ -35,7 +35,20 @@ async def webhook(request: Request):
             ai_text = resp.output_text.strip()
         except Exception as e:
             print("OpenAI error:", e)
-            ai_text = "ごめん、今ちょい詰まったわ💦 もう一回送って！"
+            from openai import OpenAI
+
+client = OpenAI()
+
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "あなたは牡蠣小屋の店主AIです。関西弁で返してください。"},
+        {"role": "user", "content": text},
+    ],
+)
+
+ai_text = response.choices[0].message.content
+
 
         # ===== LINEへ返信 =====
         res = requests.post(
