@@ -6,7 +6,17 @@ from openai import OpenAI
 app = FastAPI()
 
 LINE_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
-client = OpenAI()  # OPENAI_API_KEY を環境変数に入れてたらこれでOK
+
+def get_openai_client():
+    # 起動時にコケないように、必要な時にだけ作る
+    key = os.environ.get("OPENAI_API_KEY")
+    if not key:
+        return None
+    return OpenAI(api_key=key)
+
+@app.get("/")
+def health():
+    return {"ok": True}
 
 @app.post("/webhook")
 async def webhook(request: Request):
@@ -26,16 +36,19 @@ async def webhook(request: Request):
         if not reply_token or text is None:
             continue
 
-        # ===== AI生成 =====
-        try:
-            resp = client.responses.create(
-                model="gpt-4o-mini",
-                input=f"あなたは大阪の立ち飲み牡蠣屋の店主の相棒AI。関西弁で短めに返事して。\nユーザー: {text}\nAI:"
-            )
-            ai_text = resp.output_text.strip()
-        except Exception as e:
-            print("OpenAI error:", repr(e))
-            ai_text = "ごめん、AI側が一瞬コケたわ💦 もう一回送って〜"
+        ai_text = "ごめん、AI側が一瞬コケたわ💦 もう一回送って〜"
+
+        # ===== AI生成（キー無い時はスキップして落ちない）=====
+        client = get_openai_client()
+        if client:
+            try:
+                resp = client.responses.create(
+                    model="gpt-4o-mini",
+                    input=f"あなたは大阪の立ち飲み牡蠣屋の店主の相棒AI。関西弁で短めに返事して。\nユーザー: {text}\nAI:"
+                )
+                ai_text = resp.output_text.strip()
+            except Exception as e:
+                print("OpenAI error:", repr(e))
 
         # ===== LINEへ返信 =====
         res = requests.post(
@@ -53,5 +66,3 @@ async def webhook(request: Request):
         print("reply status:", res.status_code, res.text)
 
     return {"ok": True}
-
-          
