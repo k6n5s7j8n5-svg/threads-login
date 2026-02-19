@@ -31,21 +31,18 @@ async def webhook(request: Request):
         if not reply_token or text is None:
             continue
 
+        # ===== AI生成 =====
         try:
-            response = client.chat.completions.create(
+            resp = client.responses.create(
                 model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "あなたは大阪の立ち飲み牡蠣屋の店主の相棒AI。関西弁で短めに返事して。"},
-                    {"role": "user", "content": text},
-                ],
-                timeout=20,
+                input=f"あなたは大阪の立ち飲み牡蠣屋の店主の相棒AI。関西弁で短めに返事して。\nユーザー: {text}\nAI:"
             )
-            ai_text = response.choices[0].message.content.strip()
-
+            ai_text = resp.output_text.strip()
         except Exception as e:
             print("OpenAI error:", e)
             ai_text = "ごめん、AI側が一瞬コケたわ💦 もっかい送って〜"
 
+        # ===== LINEへ返信 =====
         res = requests.post(
             "https://api.line.me/v2/bot/message/reply",
             headers={
