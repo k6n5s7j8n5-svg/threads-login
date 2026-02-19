@@ -1,3 +1,4 @@
+print("=== VERSION: 2026-02-19 NEW CODE ===")
 import os
 import requests
 from fastapi import FastAPI, Request
