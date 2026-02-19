@@ -1,3 +1,20 @@
+from openai import OpenAI
+import os
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def test_openai():
+    try:
+        r = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": "test"}],
+        )
+        print("OpenAI OK:", r.choices[0].message.content)
+    except Exception as e:
+        print("OpenAI NG:", repr(e))
+
+test_openai()
+
 import os
 import requests
 from fastapi import FastAPI, Request
