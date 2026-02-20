@@ -179,10 +179,10 @@ async def webhook(request: Request):
         if re.search(r"(牡蠣|かき).*(残り|あと|在庫)|残り.*(牡蠣|かき).(生|殻).*牡蠣|牡蠣.*(生|殻)|在庫", text):
             line_reply(reply_token, oysters_message())
             continue# ===== 牡蠣ある？系（超重要）=====
-        if re.search(r"(牡蠣|かき)", text):
-        # 「ある」「あります」「いける」「食べれる」「？」など含む場合
-        if re.search(r"(ある|あります|いける|食べれる|食べられる|\?)", text):
-        line_reply(reply_token, oysters_message())
+        # 牡蠣ある？系
+        if re.search(r"(牡蠣|かき|生牡蠣|殻|殻付き)", text):
+        if re.search(r"(ある|あります|いける|食べれる|食べられる|\?|？|在庫|残り|まだ)", text):
+        line_reply(reply_token, shell_oysters_message())
         continue
 
          # 「牡蠣ある？」みたいに短文でも拾う
