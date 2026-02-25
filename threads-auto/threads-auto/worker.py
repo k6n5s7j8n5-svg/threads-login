@@ -6,23 +6,29 @@ def restore_storage():
     b64 = os.getenv("THREADS_STATE_B64")
     if not b64:
         print("THREADS_STATE_B64 not found")
-        return
+        return False
 
     data = base64.b64decode(b64)
     with open("threads_state.json", "wb") as f:
         f.write(data)
+    return True
 
 def post_to_threads(text):
-    restore_storage()
+    if not restore_storage():
+        return
 
     with sync_playwright() as p:
-        browser = playwright.chromium.launch(
-    headless=True,
-    args=[
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu"
+        browser = p.chromium.launch(
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--single-process",
+            ],
+        )
+
         context = browser.new_context(storage_state="threads_state.json")
         page = context.new_page()
 
