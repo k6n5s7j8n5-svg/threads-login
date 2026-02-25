@@ -16,7 +16,13 @@ def post_to_threads(text):
     restore_storage()
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = playwright.chromium.launch(
+    headless=True,
+    args=[
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu"
         context = browser.new_context(storage_state="threads_state.json")
         page = context.new_page()
 
