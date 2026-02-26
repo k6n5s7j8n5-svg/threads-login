@@ -33,18 +33,24 @@ def post(text):
             ],
         )
         context = browser.new_context(storage_state=str(STATE_PATH))
-        page = context.new_page()
+        page =page.goto(THREADS_URL, wait_until="domcontentloaded", timeout=180000)
 
-        page.goto(THREADS_URL, wait_until="domcontentloaded", timeout=180000)
+print("① goto URL:", page.url)
+page.wait_for_timeout(3000)
+print("② +3s URL:", page.url)
 
-        print("① goto直後URL:", page.url)
+# login に飛んでたら state が死んでる
+if "login" in page.url or "accounts" in page.url:
+    raise RuntimeError("Login required. Recreate THREADS_STATE_B64.")
 
-        page.wait_for_timeout(3000)
+editor = page.locator('div[contenteditable="true"]').first
+editor.wait_for(state="visible", timeout=120000)
+editor.click()
+editor.fill(text)
 
-        print("② 3秒後URL:", page.url)
-
-　　　　editor = page.locator('div[contenteditable="true"]').first
-　　　　editor.wait_for(state="visible", timeout=60000)
+# 投稿ボタン（日本語/英語どっちでも）
+page.locator('button:has-text("投稿"), button:has-text("Post")').first.click()
+page.wait_for_timeout(3000)
         editor = page.locator('div[contenteditable="true"]').first
         editor.wait_for(state="visible", timeout=60000)
         editor.click()
