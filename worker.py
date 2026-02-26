@@ -43,8 +43,8 @@ print("② +3s URL:", page.url)
 if "login" in page.url or "accounts" in page.url:
     raise RuntimeError("Login required. Recreate THREADS_STATE_B64.")
 
-editor = page.locator('div[contenteditable="true"]').first
-editor.wait_for(state="visible", timeout=120000)
+　　　　editor = page.locator('div[contenteditable="true"]').first
+　　editor.wait_for(state="visible", timeout=120000)
 editor.click()
 editor.fill(text)
 
