@@ -1,13 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
+
 app = FastAPI()
 
-@app.get("/")
+@app.get("/health")
 def health():
     return {"ok": True}
 
 @app.post("/webhook")
 async def webhook(request: Request):
-    body = await request.body()
-    print("LINE webhook:", body.decode())
-    return {"ok": True}
+    return PlainTextResponse("OK", status_code=200)
