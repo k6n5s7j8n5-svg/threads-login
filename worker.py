@@ -36,8 +36,6 @@ def post(text):
         page = context.new_page()
 
         page.goto(THREADS_URL, wait_until="domcontentloaded", timeout=180000)
-        print("［url］",page.url)
-        page.goto(THREADS_URL, wait_until="domcontentloaded", timeout=60000)
 
         print("① goto直後URL:", page.url)
 
