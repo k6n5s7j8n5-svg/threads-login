@@ -1,1 +1,13 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+line-bot-sdk==3.11.0
+python-dotenv==1.0.1
+openai==1.40.6
 playwright==1.45.0
+apscheduler==3.10.4fastapi==0.115.0
+uvicorn[standard]==0.30.6
+line-bot-sdk==3.11.0
+python-dotenv==1.0.1
+openai==1.40.6
+playwright==1.45.0
+apscheduler==3.10.4
