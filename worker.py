@@ -1,61 +1,89 @@
 import os
-import base64
-import time
-from pathlib import Path
-from playwright.sync_api import sync_playwright
+from datetime import datetime
+from apscheduler.schedulers.blocking import BlockingScheduler
+from openai import OpenAI
 
-STATE_PATH = Path("threads_state.json")
-THREADS_URL = "https://www.threads.com/compose/post"
+from db import init_db, get_draft, set_draft
+from threads_poster import post_to_threads
 
+from linebot.v3.messaging import (
+    Configuration,
+    ApiClient,
+    MessagingApi,
+    PushMessageRequest,
+    TextMessage,
+)
 
-def restore_state():
-    b64 = os.getenv("THREADS_STATE_B64")
-    if not b64:
-        raise RuntimeError("THREADS_STATE_B64 missing")
-    STATE_PATH.write_bytes(base64.b64decode(b64))
+TZ = os.getenv("TZ", "Asia/Tokyo")
+POST_TIME = os.getenv("POST_TIME", "12:00")  # HH:MM
+ADMIN_LINE_USER_ID = os.getenv("ADMIN_LINE_USER_ID", "")
 
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN", "")
+config = Configuration(access_token=LINE_CHANNEL_ACCESS_TOKEN)
 
-def get_text():
-    text = os.getenv("POST_TEXT")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+
+def push_text(text: str):
+    if not (LINE_CHANNEL_ACCESS_TOKEN and ADMIN_LINE_USER_ID):
+        return
+    with ApiClient(config) as api_client:
+        api = MessagingApi(api_client)
+        api.push_message(PushMessageRequest(to=ADMIN_LINE_USER_ID, messages=[TextMessage(text=text)]))
+
+def generate_copy() -> str:
+    if not client:
+        return "【仮】牡蠣が食べたくなる投稿文（OPENAI_API_KEY未設定）"
+
+    prompt = (
+        "あなたは大阪の小さな立ち飲み牡蠣店の店主のSNS担当です。"
+        "Threads投稿用に、牡蠣が食べたくなる短い文章を1つ作って。"
+        "条件: 80〜140文字、絵文字は1〜3個、煽りすぎない、店名は入れない、改行はOK。"
+    )
+
+    r = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.9,
+    )
+    return r.choices[0].message.content.strip()
+
+def job_midnight():
+    text = generate_copy()
+    set_draft(text, approved=False)
+    push_text("【明日のThreads下書き】\n" + text + "\n\n返信:\nOK → このまま\n修正:〜 → 差し替え")
+
+def job_post():
+    text, approved, updated_at = get_draft()
     if not text:
-        raise RuntimeError("POST_TEXT missing")
-    return text
+        push_text("下書きが無いから投稿できへんかった。")
+        return
+    if not approved:
+        push_text("下書きが未確定(OK/修正が未返信)やから投稿せえへんかった。\n" + text)
+        return
 
+    try:
+        post_to_threads(text)
+        push_text("Threads投稿完了 ✅")
+        # 投稿後は未確定に戻す（翌日用）
+        set_draft(text, approved=False)
+    except Exception as e:
+        push_text("Threads投稿失敗 ❌\n" + str(e))
 
-def post(text):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-            ],
-        )
-        context = browser.new_context(storage_state=str(STATE_PATH))
-        page =page.goto(THREADS_URL, wait_until="domcontentloaded", timeout=180000)
+def main():
+    init_db()
 
-print("① goto URL:", page.url)
-page.wait_for_timeout(3000)
-print("② +3s URL:", page.url)
+    scheduler = BlockingScheduler(timezone=TZ)
 
-# login に飛んでたら state が死んでる
-if "login" in page.url or "accounts" in page.url:
-    raise RuntimeError("Login required. Recreate THREADS_STATE_B64.")
+    # 0:00 JST
+    scheduler.add_job(job_midnight, "cron", hour=0, minute=0)
 
-　  editor = page.locator('div[contenteditable="true"]').first
-    editor.wait_for(state="visible", timeout=120000)
-    editor.click()
-    editor.fill(text)
+    # 投稿時刻
+    hh, mm = POST_TIME.split(":")
+    scheduler.add_job(job_post, "cron", hour=int(hh), minute=int(mm))
 
-    page.locator('button:has-text("投稿"), button:has-text("Post")').first.click()
-    page.wait_for_timeout(3000)
-        
-
-        browser.close()
-
+    push_text("worker起動OK（予約稼働中）")
+    scheduler.start()
 
 if __name__ == "__main__":
-    restore_state()
-    text = get_text()
-    post(text)
+    main()
