@@ -37,12 +37,21 @@ def post(text):
 
         page.goto(THREADS_URL, wait_until="domcontentloaded", timeout=180000)
         print("［url］",page.url)
-    
+        page.goto(THREADS_URL, wait_until="domcontentloaded", timeout=60000)
+
+        print("① goto直後URL:", page.url)
+
+        page.wait_for_timeout(3000)
+
+        print("② 3秒後URL:", page.url)
+
+　　　　editor = page.locator('div[contenteditable="true"]').first
+　　　　editor.wait_for(state="visible", timeout=60000)
         editor = page.locator('div[contenteditable="true"]').first
         editor.wait_for(state="visible", timeout=60000)
         editor.click()
         editor.fill(text)
-
+        
         page.locator('button:has-text("投稿"), button:has-text("Post")').first.click()
 
         page.wait_for_timeout(3000)
