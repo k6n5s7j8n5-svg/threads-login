@@ -47,15 +47,16 @@ def post_to_threads(text: str):
 
         try:
             # Threadsはtextareaじゃなく role=textbox のことが多い
-            box = page.get_by_role("textbox").first
-            box.wait_for(state="visible", timeout=60000)
-            box.fill(text)
+           # 投稿入力欄（UI変更に強い取り方）
+box = page.locator('div[contenteditable="true"]').first
+box.wait_for(state="visible", timeout=60000)
+box.click()
+box.fill(text)
 
-            # Post / 投稿 ボタン（どっちでも拾う）
-            btn = page.get_by_role("button", name=re.compile(r"(Post|投稿)"))
-            btn.wait_for(state="visible", timeout=60000)
-            btn.click()
-
+# 投稿ボタン（英語/日本語どっちでも拾う）
+btn = page.locator('button:has-text("Post"), button:has-text("投稿")').first
+btn.wait_for(state="visible", timeout=60000)
+btn.click()
             page.wait_for_timeout(5000)
             print("Posted OK (maybe).")
 
