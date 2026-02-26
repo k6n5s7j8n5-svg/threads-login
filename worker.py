@@ -43,22 +43,14 @@ print("② +3s URL:", page.url)
 if "login" in page.url or "accounts" in page.url:
     raise RuntimeError("Login required. Recreate THREADS_STATE_B64.")
 
-　　　　editor = page.locator('div[contenteditable="true"]').first
-　　editor.wait_for(state="visible", timeout=120000)
-editor.click()
-editor.fill(text)
+　    editor = page.locator('div[contenteditable="true"]').first
+    editor.wait_for(state="visible", timeout=120000)
+    editor.click()
+    editor.fill(text)
 
-# 投稿ボタン（日本語/英語どっちでも）
-page.locator('button:has-text("投稿"), button:has-text("Post")').first.click()
-page.wait_for_timeout(3000)
-        editor = page.locator('div[contenteditable="true"]').first
-        editor.wait_for(state="visible", timeout=60000)
-        editor.click()
-        editor.fill(text)
+    page.locator('button:has-text("投稿"), button:has-text("Post")').first.click()
+    page.wait_for_timeout(3000)
         
-        page.locator('button:has-text("投稿"), button:has-text("Post")').first.click()
-
-        page.wait_for_timeout(3000)
 
         browser.close()
 
