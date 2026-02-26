@@ -1,14 +1,13 @@
-from playwright.sync_api import sync_playwright
+FROM mcr.microsoft.com/playwright/python:v1.45.0-jammy
 
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=False)
-    context = browser.new_context()
-    page = context.new_page()
+WORKDIR /app
 
-    page.goto("https://www.threads.net/")
-    print("ログインしてホーム画面が出たら Enter を押して")
-    input()
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-    context.storage_state(path="threads_state.json")
-    print("保存完了: threads_state.json")
-    browser.close()
+COPY worker.py .
+
+# Screenshots dir
+RUN mkdir -p /app/screens
+
+CMD ["python", "worker.py"]
