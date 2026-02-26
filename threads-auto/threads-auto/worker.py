@@ -3,7 +3,7 @@ import base64
 import time
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright, TimeoutError as PWTimeoutError
+from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
 STATE_PATH = Path("threads_state.json")
 SCREENSHOT_DIR = Path("screens")
@@ -46,14 +46,14 @@ def take_screenshot(page, name: str) -> None:
         print(f"[screenshot] failed: {e}")
 
 def post_once(text: str) -> None:
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, args=launch_args())
-        context = p.chromium.new_context(
-            storage_state=str(STATE_PATH),
-            viewport={"width": 1280, "height": 720},
-            user_agent=os.getenv("UA_OVERRIDE") or None,
-        )
-        page = context.new_page()
+    from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    context = browser.new_context(
+        storage_state="threads_state.json"
+    )
+    page = context.new_page()
 
         try:
             print("[goto] opening compose...")
