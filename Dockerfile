@@ -10,4 +10,4 @@ COPY . /app
 ENV PYTHONUNBUFFERED=1
 ENV TZ=Asia/Tokyo
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "$PORT"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
